@@ -59,7 +59,7 @@ body {
     font-weight: 700;
 }
 
-/* CANVAS LIVE MONITOR & SAVE UTILS */
+/* CANVAS MONITOR BOX */
 .canvas-screen {
     background-color: var(--stark-white);
     border: 3px solid var(--pitch-black);
@@ -140,15 +140,15 @@ canvas {
     font-family: var(--font-mono);
     font-weight: 700;
     font-size: 12px;
-    background: #A7F3D0; /* Light safe green */
+    background: #A7F3D0; 
     border: 3px solid var(--pitch-black);
     padding: 12px;
     cursor: pointer;
     box-shadow: 2px 2px 0px var(--pitch-black);
-    display: none; /* Only reveals when an image asset exists */
+    display: none; 
 }
 
-/* CONTROL PANELS */
+/* CONTROLS */
 .control-tower {
     display: flex;
     flex-direction: column;
@@ -197,9 +197,9 @@ canvas {
     text-align: center;
     background-color: var(--cyber-yellow);
     border: 3px solid var(--pitch-black);
-    padding: 10px;
+    padding: 12px;
     font-weight: 700;
-    font-size: 11px;
+    font-size: 12px;
     cursor: pointer;
     box-shadow: 2px 2px 0px var(--pitch-black);
 }
@@ -244,7 +244,6 @@ canvas {
     cursor: pointer;
 }
 
-/* RETRO DIGICAM MATRIX BUTTONS */
 .macro-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -267,8 +266,6 @@ canvas {
     box-shadow: 1px 1px 0px var(--pitch-black);
 }
 
-.photobooth-init-btn { background: var(--brutal-gray); }
-
 .filter-flash { background-color: var(--flash-pink); }
 .filter-night { background-color: var(--night-green); }
 .filter-crush { background-color: var(--crush-blue); }
@@ -287,7 +284,7 @@ canvas {
     width: 100%;
 }
 
-/* LAPTOPS & DESKTOPS RESPONSIVE MEDIA QUERIES */
+/* MEDIA QUERIES */
 @media (min-width: 768px) {
     body { padding: 24px; overflow: hidden; }
     .brutal-viewport {
