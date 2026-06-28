@@ -2,7 +2,7 @@
 
 A lightweight, mobile-first web app that emulates early 2000s digicam hardware filters, sensor pixelation artifacts, and realistic analog film photobooth layouts using pure HTML5 Canvas byte manipulation.
 
-### 🔗 [Live Demo Link]https://mantasha1501.github.io/y2k-digicam-processor/
+### 🔗 [Live Demo Link] https://mantasha1501.github.io/y2k-digicam-processor/
 
 ---
 
@@ -15,17 +15,27 @@ A lightweight, mobile-first web app that emulates early 2000s digicam hardware f
 
 ---
 
-## 🎨 Built With
-* **HTML5** (Structured Document Layers & Native Canvas Rendering Elements)
-* **CSS3** (Neo-Brutalist Layout Engine, Mobile-First Media Queries)
-* **Vanilla JavaScript** (Asynchronous File API, Client-side Blob Export Pipelines)
+## 🛠️ How It Works
+
+Unlike apps that use simple CSS style overlays, this engine processes data directly at the pixel level using the HTML5 Canvas 2D Context API:
+
+1. **Asset Ingestion:** Images loaded through the File Reader API are written into an offscreen image element memory buffer.
+2. **Matrix Rescaling (Pixelation):** Pixelation is achieved by shrinking the canvas buffer coordinates down to a fraction of their size (`width / pixelSize`) with image smoothing explicitly disabled (`imageSmoothingEnabled = false`), then stretching it back up to force retro pixel grid interpolation.
+3. **Byte Stream Processing:** The engine loops through the raw `RGBA` pixel arrays to calculate custom color weights, color noise offsets, and channel limits mathematically in real time.
 
 ---
 
-## 🛠️ Local Development & Setup
+## 📸 Core Filter Implementations
+* **⚡ FLASH BLEACH:** Multiplies absolute primary colors to emulate overexposed vintage camera flash tubes.
+* **🟢 CYBER NIGHT:** Computes accurate pixel luminance values and remaps them exclusively across boosted green channels to replicate retro night-vision sensors.
+* **👾 BIT-CRUSH:** Segments color values into low-fidelity byte chunks to recreate older flash storage read-write constraints.
+* **🎞️ VINTAGE CHROME:** Artificially warms red matrix channels while drawing down cool blue saturation to capture aging color profiles.
 
-If you want to run this project locally on your machine or extend its visual processing scripts:
+---
 
-1. Clone the repository down to your computer terminal:
-   ```bash
-   git clone [https://github.com/YOUR_USERNAME/digicam-effects-engine.git](https://github.com/YOUR_USERNAME/digicam-effects-engine.git)
+## 📂 Project Architecture
+
+```text
+├── index.html      # Mobile-first semantic layout structure & web application controls
+├── style.css       # Neo-Brutalist design tokens, custom sliders, and responsive breakpoints
+└── script.js       # Core image processing, pixel array looping, and canvas render pipelines
