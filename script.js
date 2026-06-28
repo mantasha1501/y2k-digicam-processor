@@ -9,9 +9,6 @@ let activeFilters = {
     vintageChrome: false
 };
 
-let photoboothFrames = [];
-let photoboothModeActive = false;
-
 function loadSourceImageIntoCanvas() {
     const fileSelectorInput = document.getElementById('imageUpload').files[0];
     if (!fileSelectorInput) return;
@@ -20,23 +17,45 @@ function loadSourceImageIntoCanvas() {
     pipelineFileReader.onload = function(eventResult) {
         const tempImg = new Image();
         tempImg.onload = function() {
-            if (photoboothModeActive) {
-                if (photoboothFrames.length < 4) {
-                    photoboothFrames.push(tempImg);
-                    compilePhotoboothStrip();
+            // SAFE SMART-DOWNSCALING FOR HIGH-RES PHONE IMAGES
+            // Prevents high-megapixel photos from crashing lower-memory phone browser engines
+            const MAX_ALLOWED_DIMENSION = 1200;
+            let targetWidth = tempImg.width;
+            let targetHeight = tempImg.height;
+
+            if (targetWidth > MAX_ALLOWED_DIMENSION || targetHeight > MAX_ALLOWED_DIMENSION) {
+                if (targetWidth > targetHeight) {
+                    targetHeight = Math.round((targetHeight * MAX_ALLOWED_DIMENSION) / targetWidth);
+                    targetWidth = MAX_ALLOWED_DIMENSION;
+                } else {
+                    targetWidth = Math.round((targetWidth * MAX_ALLOWED_DIMENSION) / targetHeight);
+                    targetHeight = MAX_ALLOWED_DIMENSION;
                 }
-            } else {
-                cachingSourceImageObject = tempImg;
+            }
+
+            // Create a secondary background staging canvas to cleanly downsample the image scale
+            const offscreenCanvas = document.createElement('canvas');
+            offscreenCanvas.width = targetWidth;
+            offscreenCanvas.height = targetHeight;
+            const offscreenCtx = offscreenCanvas.getContext('2d');
+            offscreenCtx.drawImage(tempImg, 0, 0, targetWidth, targetHeight);
+
+            // Re-cache the streamlined asset down to native size boundaries
+            const optimizedImg = new Image();
+            optimizedImg.onload = function() {
+                cachingSourceImageObject = optimizedImg;
                 coreCanvasElement.width = cachingSourceImageObject.width;
                 coreCanvasElement.height = cachingSourceImageObject.height;
                 canvasRendering2DContext.drawImage(cachingSourceImageObject, 0, 0);
+                
                 document.getElementById('resolutionDisplay').innerText = `RAW: ${cachingSourceImageObject.width}x${cachingSourceImageObject.height}`;
                 document.getElementById('fallbackText').style.display = 'none';
+                document.getElementById('downloadBtn').style.display = 'block';
+                
                 resetAllFilterToggles();
                 clearInterfaceSlidersToZero();
-            }
-            // Show save option whenever canvas holds image registers
-            document.getElementById('downloadBtn').style.display = 'block';
+            };
+            optimizedImg.src = offscreenCanvas.toDataURL('image/jpeg', 0.85);
         };
         tempImg.src = eventResult.target.result;
     };
@@ -54,7 +73,7 @@ function clearInterfaceSlidersToZero() {
 
 function resetAllFilterToggles() {
     activeFilters = { flashBleach: false, cyberNight: false, bitCrush: false, vintageChrome: false };
-    const buttons = document.querySelectorAll('.macro-btn:not(.photobooth-init-btn)');
+    const buttons = document.querySelectorAll('.macro-btn');
     buttons.forEach(btn => {
         btn.style.border = "3px solid #000000";
         btn.style.boxShadow = "2px 2px 0px #000000";
@@ -62,15 +81,10 @@ function resetAllFilterToggles() {
 }
 
 function resetSourceImageToBaseline() {
-    // Completely clears all settings and cached variables
-    photoboothModeActive = false;
-    photoboothFrames = [];
     cachingSourceImageObject = null;
     resetAllFilterToggles();
     clearInterfaceSlidersToZero();
     
-    document.getElementById('boothToggleBtn').innerText = "🎞️ ACTIVATE PHOTOBOOTH MODE";
-    document.getElementById('boothToggleBtn').style.background = "var(--brutal-gray)";
     document.getElementById('resolutionDisplay').innerText = "NO_SIGNAL";
     document.getElementById('fallbackText').style.display = 'flex';
     document.getElementById('fallbackText').innerText = "[!] INSERT MEDIA CARD";
@@ -79,33 +93,8 @@ function resetSourceImageToBaseline() {
     canvasRendering2DContext.clearRect(0, 0, coreCanvasElement.width, coreCanvasElement.height);
 }
 
-// TOGGLE LOGIC SWITCH FOR MODE SELECTIONS
-function togglePhotoboothMode() {
-    if (photoboothModeActive) {
-        // EXIT MODE: Turn off photobooth operations and reset everything back to baseline
-        resetSourceImageToBaseline();
-    } else {
-        // ENTER MODE: Turn on photobooth strip configuration parameters
-        photoboothModeActive = true;
-        photoboothFrames = [];
-        resetAllFilterToggles();
-        clearInterfaceSlidersToZero();
-        
-        document.getElementById('boothToggleBtn').innerText = "❌ EXIT PHOTOBOOTH MODE";
-        document.getElementById('boothToggleBtn').style.background = "#F87171"; // Red alarm color
-        
-        coreCanvasElement.width = 400;
-        coreCanvasElement.height = 1450;
-        document.getElementById('resolutionDisplay').innerText = "MODE: PHOTOBOOTH STRIP";
-        document.getElementById('fallbackText').style.display = 'none';
-        document.getElementById('downloadBtn').style.display = 'block';
-        
-        renderBasePhotoboothLayout();
-    }
-}
-
 function toggleFilter(filterName, buttonElement) {
-    if (!cachingSourceImageObject && !photoboothModeActive) return;
+    if (!cachingSourceImageObject) return;
     activeFilters[filterName] = !activeFilters[filterName];
     
     if (activeFilters[filterName]) {
@@ -116,16 +105,11 @@ function toggleFilter(filterName, buttonElement) {
         buttonElement.style.boxShadow = "2px 2px 0px #000000";
     }
     
-    if (photoboothModeActive) {
-        compilePhotoboothStrip();
-    } else {
-        applyDigicamTransforms();
-    }
+    applyDigicamTransforms();
 }
 
-// MAIN TRANSFORMS SENSOR FILTER STACKS
 function applyDigicamTransforms() {
-    if (!cachingSourceImageObject && !photoboothModeActive) return;
+    if (!cachingSourceImageObject) return;
 
     const pixelSize = parseInt(document.getElementById('pixelateSlider').value);
     const noiseLevel = parseInt(document.getElementById('noiseSlider').value);
@@ -143,14 +127,11 @@ function applyDigicamTransforms() {
         const smallH = Math.max(1, Math.floor(h / pixelSize));
         canvasRendering2DContext.imageSmoothingEnabled = false;
         
-        if (photoboothModeActive) { renderBasePhotoboothLayout(); } 
-        else { canvasRendering2DContext.drawImage(cachingSourceImageObject, 0, 0, w, h); }
-        
+        canvasRendering2DContext.drawImage(cachingSourceImageObject, 0, 0, w, h);
         canvasRendering2DContext.drawImage(coreCanvasElement, 0, 0, w, h, 0, 0, smallW, smallH);
         canvasRendering2DContext.drawImage(coreCanvasElement, 0, 0, smallW, smallH, 0, 0, w, h);
     } else {
-        if (photoboothModeActive) { renderBasePhotoboothLayout(); } 
-        else { canvasRendering2DContext.drawImage(cachingSourceImageObject, 0, 0); }
+        canvasRendering2DContext.drawImage(cachingSourceImageObject, 0, 0);
     }
 
     const frameData = canvasRendering2DContext.getImageData(0, 0, w, h);
@@ -195,52 +176,12 @@ function applyDigicamTransforms() {
     canvasRendering2DContext.putImageData(frameData, 0, 0);
 }
 
-// REAL FILM PHOTOBOOTH STRIP RENDERING MATRICES
-function renderBasePhotoboothLayout() {
-    canvasRendering2DContext.fillStyle = "#FFFFFF";
-    canvasRendering2DContext.fillRect(0, 0, coreCanvasElement.width, coreCanvasElement.height);
-
-    const frameWidth = 340;
-    const frameHeight = 310;
-    const leftMargin = 30;
-    const topStartMargin = 35;
-    const verticalGap = 18;
-
-    for (let index = 0; index < 4; index++) {
-        const currentYCoordinate = topStartMargin + index * (frameHeight + verticalGap);
-        
-        if (photoboothFrames[index]) {
-            canvasRendering2DContext.drawImage(photoboothFrames[index], leftMargin, currentYCoordinate, frameWidth, frameHeight);
-        } else {
-            canvasRendering2DContext.fillStyle = "#1A1A1A";
-            canvasRendering2DContext.fillRect(leftMargin, currentYCoordinate, frameWidth, frameHeight);
-            canvasRendering2DContext.fillStyle = "#666666";
-            canvasRendering2DContext.font = "bold 10px Space Mono";
-            canvasRendering2DContext.textAlign = "center";
-            canvasRendering2DContext.fillText(`[ CAM_ROLL_FRAME_0${index + 1} ]`, coreCanvasElement.width / 2, currentYCoordinate + (frameHeight / 2));
-        }
-    }
-}
-
-function compilePhotoboothStrip() {
-    renderBasePhotoboothLayout();
-    applyDigicamTransforms(); 
-}
-
-// CLIENT FILE EXPORT PIPELINES
 function downloadEditedAsset() {
-    // Grabs active data URLs direct from canvas rendering layers
     const imageSourceDataURL = coreCanvasElement.toDataURL("image/jpeg", 0.95);
-    
-    // Instantiates temporary virtual anchor links to trigger native system device file saving layers
     const clientDownloadTriggerAnchor = document.createElement('a');
     clientDownloadTriggerAnchor.href = imageSourceDataURL;
-    
-    // Generates unique timestamp tags for file names
     const fileTimestamp = Math.floor(Date.now() / 1000);
     clientDownloadTriggerAnchor.download = `DIGICAM_${fileTimestamp}.jpg`;
-    
-    // Fire event click routines to pass items directly to the mobile device download queue
     document.body.appendChild(clientDownloadTriggerAnchor);
     clientDownloadTriggerAnchor.click();
     document.body.removeChild(clientDownloadTriggerAnchor);
