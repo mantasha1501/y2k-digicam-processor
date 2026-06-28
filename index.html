@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>📷 PixelForge // Y2K Digicam Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="brutal-viewport">
+        <header class="brand-block">
+            <h1>DIGICAM.EXE</h1>
+            <p class="brand-sub">Y2K CCD Sensor Emulation Lab</p>
+        </header>
+
+        <main class="canvas-screen">
+            <div class="screen-meta-header">
+                <h2>CCD_LIVE_BUFFER // REC [●]</h2>
+                <div class="resolution-tag" id="resolutionDisplay">NO_SIGNAL</div>
+            </div>
+
+            <div class="canvas-container-housing">
+                <div class="canvas-shadow-box">
+                    <canvas id="mainProcessorCanvas"></canvas>
+                    <div class="empty-canvas-fallback" id="fallbackText">
+                        <span>[!] INSERT MEDIA CARD</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="canvas-export-bar">
+                <button id="downloadBtn" class="export-btn" onclick="downloadEditedAsset()">💾 SAVE TO CAMERA ROLL</button>
+            </div>
+        </main>
+
+        <div class="control-tower">
+            <div class="brutal-card">
+                <span class="step-badge">01</span>
+                <h3>INGEST ASSET</h3>
+                <div class="mode-split-row">
+                    <button id="boothToggleBtn" class="macro-btn photobooth-init-btn" onclick="togglePhotoboothMode()">🎞️ ACTIVATE PHOTOBOOTH MODE</button>
+                    <label for="imageUpload" class="custom-file-btn">CHOOSE PHOTO</label>
+                    <input type="file" id="imageUpload" accept="image/*" onchange="loadSourceImageIntoCanvas()">
+                </div>
+            </div>
+
+            <div class="brutal-card processing-card">
+                <span class="step-badge">02</span>
+                <h3>SENSOR MATRIX</h3>
+                
+                <div class="control-row">
+                    <div class="slider-header">
+                        <label>Pixelation</label>
+                        <span class="slider-val" id="pixelVal">1px</span>
+                    </div>
+                    <input type="range" id="pixelateSlider" min="1" max="32" value="1" oninput="applyDigicamTransforms()">
+                </div>
+
+                <div class="control-row">
+                    <div class="slider-header">
+                        <label>ISO Noise</label>
+                        <span class="slider-val" id="noiseVal">0%</span>
+                    </div>
+                    <input type="range" id="noiseSlider" min="0" max="100" value="0" oninput="applyDigicamTransforms()">
+                </div>
+
+                <div class="control-row">
+                    <div class="slider-header">
+                        <label>Chroma Stain</label>
+                        <span class="slider-val" id="chromaVal">0%</span>
+                    </div>
+                    <input type="range" id="chromaSlider" min="0" max="100" value="0" oninput="applyDigicamTransforms()">
+                </div>
+
+                <div class="macro-actions">
+                    <button class="macro-btn filter-flash" onclick="toggleFilter('flashBleach', this)">⚡ FLASH</button>
+                    <button class="macro-btn filter-night" onclick="toggleFilter('cyberNight', this)">🟢 NIGHT</button>
+                    <button class="macro-btn filter-crush" onclick="toggleFilter('bitCrush', this)">👾 CRUSH</button>
+                    <button class="macro-btn filter-chrome" onclick="toggleFilter('vintageChrome', this)">🎞️ CHROME</button>
+                </div>
+            </div>
+
+            <button class="brutal-reset-btn" onclick="resetSourceImageToBaseline()">CLEAR CACHE</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
